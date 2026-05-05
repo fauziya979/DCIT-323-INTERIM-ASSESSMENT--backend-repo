@@ -2,7 +2,11 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-require("dotenv").config();
+
+// Load .env only in local development — Render injects env vars directly
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 
 const app = express();
 
@@ -38,8 +42,12 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
+// Safe debug log — confirms env var is present without exposing the value
+console.log("MONGO_URI loaded:", !!process.env.MONGO_URI);
+console.log("JWT_SECRET loaded:", !!process.env.JWT_SECRET);
+
 if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
-  console.error("Missing required environment variables: MONGO_URI and JWT_SECRET");
+  console.error("ERROR: Missing required environment variables: MONGO_URI and/or JWT_SECRET");
   process.exit(1);
 }
 
@@ -51,7 +59,7 @@ async function startServer() {
       console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
-    console.error("Failed to start server:", error.message);
+    console.error("MongoDB connection failed:", error.message);
     process.exit(1);
   }
 }
